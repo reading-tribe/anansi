@@ -14,6 +14,7 @@ import (
 	"github.com/reading-tribe/anansi/pkg/logging"
 	"github.com/reading-tribe/anansi/pkg/nettypes"
 	"github.com/reading-tribe/anansi/pkg/repository"
+	"github.com/reading-tribe/anansi/pkg/timex"
 	"github.com/sirupsen/logrus"
 )
 
@@ -74,7 +75,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	createSessionErr := sessionRepository.CreateSession(ctx, dbmodel.Session{
 		Key:           sessionKey,
 		EmailAddress:  parsedRequest.EmailAddress,
-		ExpiresAtUnix: 0,
+		ExpiresAtUnix: timex.GetFutureUTCUnixNano(timex.ThirtyMinutes()),
 	})
 	if createSessionErr != nil {
 		logrus.Error("Error occurred while trying to create session", createSessionErr)
