@@ -12,7 +12,6 @@ import (
 	"github.com/reading-tribe/anansi/pkg/logging"
 	"github.com/reading-tribe/anansi/pkg/nettypes"
 	"github.com/reading-tribe/anansi/pkg/repository"
-	"github.com/sirupsen/logrus"
 )
 
 const FuncName = "Anansi.API-Auth.FuncRegister"
@@ -22,17 +21,17 @@ func main() {
 }
 
 func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	logging.SetupLogger(map[string]interface{}{
+	localLogger := logging.NewLogger(map[string]interface{}{
 		logging.FunctionName:      FuncName,
 		logging.RequestIdentifier: logging.UniqueRequestName(),
 		logging.FieldEvent:        request,
 	})
-	logrus.Info("Request received!")
+	localLogger.Info("Request received!")
 
 	var parsedRequest nettypes.RegisterRequest
 	parseError := json.Unmarshal([]byte(request.Body), &parsedRequest)
 	if parseError != nil {
-		logrus.Error("Error occurred while trying to parse body as nettypes.RegisterRequest", parseError)
+		localLogger.Error("Error occurred while trying to parse body as nettypes.RegisterRequest", parseError)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, parseError
@@ -48,7 +47,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		PasswordHash: hashedPassword,
 	})
 	if createErr != nil {
-		logrus.Error("Error occurred while trying to create user", createErr)
+		localLogger.Error("Error occurred while trying to create user", createErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, createErr
@@ -60,7 +59,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	responseJSON, marshalErr := json.Marshal(responseBody)
 	if marshalErr != nil {
-		logrus.Error("Error occurred while trying to marshal response as json", marshalErr)
+		localLogger.Error("Error occurred while trying to marshal response as json", marshalErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, marshalErr

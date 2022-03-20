@@ -25,17 +25,17 @@ func main() {
 }
 
 func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	logging.SetupLogger(map[string]interface{}{
+	localLogger := logging.NewLogger(map[string]interface{}{
 		logging.FunctionName:      FuncName,
 		logging.RequestIdentifier: logging.UniqueRequestName(),
 		logging.FieldEvent:        request,
 	})
-	logrus.Info("Request received!")
+	localLogger.Info("Request received!")
 
 	var parsedRequest nettypes.LoginRequest
 	parseError := json.Unmarshal([]byte(request.Body), &parsedRequest)
 	if parseError != nil {
-		logrus.Error("Error occurred while trying to parse body as nettypes.LoginRequest", parseError)
+		localLogger.Error("Error occurred while trying to parse body as nettypes.LoginRequest", parseError)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, parseError
@@ -47,7 +47,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	user, getUserErr := userRepository.GetUser(ctx, parsedRequest.EmailAddress)
 	if getUserErr != nil {
-		logrus.Error("Error occurred while trying to get user", getUserErr)
+		localLogger.Error("Error occurred while trying to get user", getUserErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusBadRequest,
 		}, getUserErr
@@ -56,7 +56,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	if comparisonErr := cryptography.ComparePasswords(
 		user.PasswordHash, passwordBytes,
 	); comparisonErr != nil {
-		logrus.Error("Password did not match", comparisonErr)
+		localLogger.Error("Password did not match", comparisonErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusBadRequest,
 		}, fmt.Errorf("Bad login attempt")
@@ -66,7 +66,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	sessionKey, sessionKeyErr := idx.NewSessionID()
 	if sessionKeyErr != nil {
-		logrus.Error("Error occurred while trying to generate session key", sessionKeyErr)
+		localLogger.Error("Error occurred while trying to generate session key", sessionKeyErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, sessionKeyErr
@@ -78,7 +78,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		ExpiresAtUnix: timex.GetFutureUTCUnixNano(timex.ThirtyMinutes()),
 	})
 	if createSessionErr != nil {
-		logrus.Error("Error occurred while trying to create session", createSessionErr)
+		localLogger.Error("Error occurred while trying to create session", createSessionErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, createSessionErr
