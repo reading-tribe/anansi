@@ -15,7 +15,7 @@ func GetClient(ctx context.Context) (*dynamodb.Client, error) {
 		config.WithRegion(os.Getenv("AWS_REGION")),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("GetUser > LoadDefaultConfig: %v\n", err)
+		return nil, fmt.Errorf("LoadDefaultConfig: %v\n", err)
 	}
 	client := dynamodb.NewFromConfig(cfg)
 	return client, nil
