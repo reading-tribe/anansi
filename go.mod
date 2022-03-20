@@ -30,5 +30,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.8.0
 	github.com/aws/smithy-go v1.11.1 // indirect
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
+	github.com/segmentio/ksuid v1.0.4
 	github.com/sirupsen/logrus v1.8.1
 )

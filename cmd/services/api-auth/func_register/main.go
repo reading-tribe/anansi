@@ -60,7 +60,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	responseJSON, marshalErr := json.Marshal(responseBody)
 	if marshalErr != nil {
-		logrus.Error("Error occurred while trying to marshal response as json")
+		logrus.Error("Error occurred while trying to marshal response as json", marshalErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, marshalErr

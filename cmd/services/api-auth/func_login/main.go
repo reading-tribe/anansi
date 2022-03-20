@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/reading-tribe/anansi/pkg/cryptography"
+	"github.com/reading-tribe/anansi/pkg/dbmodel"
+	"github.com/reading-tribe/anansi/pkg/idx"
 	"github.com/reading-tribe/anansi/pkg/logging"
 	"github.com/reading-tribe/anansi/pkg/nettypes"
 	"github.com/reading-tribe/anansi/pkg/repository"
@@ -59,14 +61,36 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, fmt.Errorf("Bad login attempt")
 	}
 
+	sessionRepository := repository.NewSessionRepository()
+
+	sessionKey, sessionKeyErr := idx.NewSessionID()
+	if sessionKeyErr != nil {
+		logrus.Error("Error occurred while trying to generate session key", sessionKeyErr)
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusInternalServerError,
+		}, sessionKeyErr
+	}
+
+	createSessionErr := sessionRepository.CreateSession(ctx, dbmodel.Session{
+		Key:           sessionKey,
+		EmailAddress:  parsedRequest.EmailAddress,
+		ExpiresAtUnix: 0,
+	})
+	if createSessionErr != nil {
+		logrus.Error("Error occurred while trying to create session", createSessionErr)
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusInternalServerError,
+		}, createSessionErr
+	}
+
 	responseBody := nettypes.LoginResponse{
-		Token:   "faketoken",
+		Token:   sessionKey,
 		Message: "Successfully logged user in",
 	}
 
 	responseJSON, marshalErr := json.Marshal(responseBody)
 	if marshalErr != nil {
-		logrus.Error("Error occurred while trying to marshal response as json")
+		logrus.Error("Error occurred while trying to marshal response as json", marshalErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, marshalErr
