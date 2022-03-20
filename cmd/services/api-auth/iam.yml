@@ -1,0 +1,27 @@
+Resources:
+  AuthAPILambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: AuthAPI
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: AuthAPIPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource:
+                  - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_users
