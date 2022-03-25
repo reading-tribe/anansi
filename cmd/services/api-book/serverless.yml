@@ -1,0 +1,86 @@
+service: BookAPI
+frameworkVersion: '2'
+configValidationMode: error
+unresolvedVariablesNotificationMode: error
+deprecationNotificationMode: error
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: ${opt:stage}
+  region: eu-central-1
+  stackName: BookAPI
+  memorySize: 1024
+  timeout: 10
+  logRetentionInDays: 14
+  deploymentPrefix: serverless
+  versionFunctions: false
+  environment:
+    ENVIRONMENT: ${opt:stage}
+    endpointType: regional
+  iam:
+    role: BookAPILambdaRole
+
+package:
+  individually: true
+  excludeDevDependencies: false
+
+resources:
+  - ${file(./iam.yml)}
+
+functions:
+  CreateBook:
+    handler: bin/func_create_book
+    name: BookAPI-CreateBook
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_create_book
+    events:
+      - httpApi:
+          path: /book
+          method: POST
+  DeleteBook:
+    handler: bin/func_delete_book
+    name: BookAPI-DeleteBook
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_delete_book
+    events:
+      - httpApi:
+          path: /book/{id}
+          method: DELETE
+  GetBook:
+    handler: bin/func_get_book
+    name: BookAPI-GetBook
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_get_book
+    events:
+      - httpApi:
+          path: /book/{id}
+          method: GET
+  ListBooks:
+    handler: bin/func_list_books
+    name: BookAPI-ListBooks
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_list_books
+    events:
+      - httpApi:
+          path: /book
+          method: GET
+  UpdateBook:
+    handler: bin/func_update_book
+    name: BookAPI-UpdateBook
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_update_book
+    events:
+      - httpApi:
+          path: /book/{id}
+          method: PATCH

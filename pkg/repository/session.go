@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -17,6 +18,9 @@ const SessionTableName = "zula_sessions"
 type SessionRepository interface {
 	GetSession(ctx context.Context, key string) (dbmodel.Session, error)
 	CreateSession(ctx context.Context, newSession dbmodel.Session) error
+	ListSessions(ctx context.Context) ([]dbmodel.Session, error)
+	UpdateSession(ctx context.Context, updatedSession dbmodel.Session) error
+	DeleteSession(ctx context.Context, key string) error
 }
 
 type sessionRepository struct{}
@@ -74,6 +78,74 @@ func (s sessionRepository) CreateSession(ctx context.Context, newSession dbmodel
 
 	if err != nil {
 		return fmt.Errorf("CreateSession > PutItem: %v\n", err)
+	}
+
+	return nil
+}
+
+func (s sessionRepository) ListSessions(ctx context.Context) ([]dbmodel.Session, error) {
+	client, getClientErr := dynamodbx.GetClient(ctx)
+	if getClientErr != nil {
+		return nil, fmt.Errorf("ListSessions > GetClient: %\n", getClientErr)
+	}
+
+	items := []dbmodel.Session{}
+
+	data, err := client.Query(ctx, &dynamodb.QueryInput{
+		TableName:                 aws.String(SessionTableName),
+		IndexName:                 aws.String("key"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{},
+	})
+	if err != nil {
+		return items, fmt.Errorf("ListSessions > Query: %v\n", err)
+	}
+
+	err = attributevalue.UnmarshalListOfMaps(data.Items, &items)
+	if err != nil {
+		return items, fmt.Errorf("ListSessions > UnmarshalListOfMaps: %v\n", err)
+	}
+
+	return items, nil
+}
+
+func (s sessionRepository) UpdateSession(ctx context.Context, updatedSession dbmodel.Session) error {
+	client, getClientErr := dynamodbx.GetClient(ctx)
+	if getClientErr != nil {
+		return fmt.Errorf("UpdateSession > GetClient: %\n", getClientErr)
+	}
+
+	_, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(SessionTableName),
+		Key: map[string]types.AttributeValue{
+			"key": &types.AttributeValueMemberS{Value: updatedSession.Key},
+		},
+		UpdateExpression: aws.String("set expires_at = :expires_at"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":expires_at": &types.AttributeValueMemberS{Value: strconv.FormatInt(updatedSession.ExpiresAtUnix, 10)},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("UpdateSession > UpdateItem: %v\n", err)
+	}
+
+	return nil
+}
+
+func (s sessionRepository) DeleteSession(ctx context.Context, key string) error {
+	client, getClientErr := dynamodbx.GetClient(ctx)
+	if getClientErr != nil {
+		return fmt.Errorf("DeleteSession > GetClient: %\n", getClientErr)
+	}
+
+	_, err := client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		TableName: aws.String(SessionTableName),
+		Key: map[string]types.AttributeValue{
+			"key": &types.AttributeValueMemberS{Value: key},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("DeleteSession > DeleteItem: %v\n", err)
 	}
 
 	return nil

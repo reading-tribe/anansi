@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/reading-tribe/anansi/pkg/cryptography"
 	"github.com/reading-tribe/anansi/pkg/dbmodel"
+	"github.com/reading-tribe/anansi/pkg/headers"
 	"github.com/reading-tribe/anansi/pkg/idx"
 	"github.com/reading-tribe/anansi/pkg/logging"
 	"github.com/reading-tribe/anansi/pkg/nettypes"
@@ -99,6 +100,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
+		Headers:    headers.NewMapHeader().ContentTypeJSON().GetMap(),
 		Body:       string(responseJSON),
 	}, nil
 }
