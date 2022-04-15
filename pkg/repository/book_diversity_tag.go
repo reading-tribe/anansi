@@ -32,7 +32,7 @@ func (b bookDiversityTagsRepository) GetBookDiversityTag(ctx context.Context, id
 
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return item, fmt.Errorf("GetBookDiversityTag > GetClient: %\n", getClientErr)
+		return item, fmt.Errorf("GetBookDiversityTag > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := client.GetItem(ctx, &dynamodb.GetItemInput{
@@ -61,7 +61,7 @@ func (b bookDiversityTagsRepository) GetBookDiversityTag(ctx context.Context, id
 func (b bookDiversityTagsRepository) CreateBookDiversityTag(ctx context.Context, newBookDiversityTags dbmodel.BookDiversityTags) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("CreateBookDiversityTag > GetClient: %\n", getClientErr)
+		return fmt.Errorf("CreateBookDiversityTag > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := attributevalue.MarshalMap(newBookDiversityTags)
@@ -84,7 +84,7 @@ func (b bookDiversityTagsRepository) CreateBookDiversityTag(ctx context.Context,
 func (b bookDiversityTagsRepository) ListBookDiversityTags(ctx context.Context) ([]dbmodel.BookDiversityTags, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return nil, fmt.Errorf("ListBookDiversityTags > GetClient: %\n", getClientErr)
+		return nil, fmt.Errorf("ListBookDiversityTags > GetClient: %v\n", getClientErr)
 	}
 
 	items := []dbmodel.BookDiversityTags{}
@@ -109,7 +109,7 @@ func (b bookDiversityTagsRepository) ListBookDiversityTags(ctx context.Context) 
 func (b bookDiversityTagsRepository) DeleteBookDiversityTag(ctx context.Context, id string) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("DeleteBookDiversityTag > GetClient: %\n", getClientErr)
+		return fmt.Errorf("DeleteBookDiversityTag > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.DeleteItem(ctx, &dynamodb.DeleteItemInput{

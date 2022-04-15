@@ -11,16 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/reading-tribe/anansi/pkg/dbmodel"
 	"github.com/reading-tribe/anansi/pkg/dynamodbx"
+	"github.com/reading-tribe/anansi/pkg/idx"
 )
 
 const SessionTableName = "zula_sessions"
 
 type SessionRepository interface {
-	GetSession(ctx context.Context, key string) (dbmodel.Session, error)
+	GetSession(ctx context.Context, key idx.SessionID) (dbmodel.Session, error)
 	CreateSession(ctx context.Context, newSession dbmodel.Session) error
 	ListSessions(ctx context.Context) ([]dbmodel.Session, error)
 	UpdateSession(ctx context.Context, updatedSession dbmodel.Session) error
-	DeleteSession(ctx context.Context, key string) error
+	DeleteSession(ctx context.Context, key idx.SessionID) error
 }
 
 type sessionRepository struct{}
@@ -29,18 +30,18 @@ func NewSessionRepository() SessionRepository {
 	return sessionRepository{}
 }
 
-func (s sessionRepository) GetSession(ctx context.Context, key string) (dbmodel.Session, error) {
+func (s sessionRepository) GetSession(ctx context.Context, key idx.SessionID) (dbmodel.Session, error) {
 	item := dbmodel.Session{}
 
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return item, fmt.Errorf("GetSession > GetClient: %\n", getClientErr)
+		return item, fmt.Errorf("GetSession > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(UserTableName),
 		Key: map[string]types.AttributeValue{
-			"key": &types.AttributeValueMemberS{Value: key},
+			"key": &types.AttributeValueMemberS{Value: key.String()},
 		},
 	})
 
@@ -63,7 +64,7 @@ func (s sessionRepository) GetSession(ctx context.Context, key string) (dbmodel.
 func (s sessionRepository) CreateSession(ctx context.Context, newSession dbmodel.Session) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("CreateSession > GetClient: %\n", getClientErr)
+		return fmt.Errorf("CreateSession > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := attributevalue.MarshalMap(newSession)
@@ -86,7 +87,7 @@ func (s sessionRepository) CreateSession(ctx context.Context, newSession dbmodel
 func (s sessionRepository) ListSessions(ctx context.Context) ([]dbmodel.Session, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return nil, fmt.Errorf("ListSessions > GetClient: %\n", getClientErr)
+		return nil, fmt.Errorf("ListSessions > GetClient: %v\n", getClientErr)
 	}
 
 	items := []dbmodel.Session{}
@@ -111,13 +112,13 @@ func (s sessionRepository) ListSessions(ctx context.Context) ([]dbmodel.Session,
 func (s sessionRepository) UpdateSession(ctx context.Context, updatedSession dbmodel.Session) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("UpdateSession > GetClient: %\n", getClientErr)
+		return fmt.Errorf("UpdateSession > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String(SessionTableName),
 		Key: map[string]types.AttributeValue{
-			"key": &types.AttributeValueMemberS{Value: updatedSession.Key},
+			"key": &types.AttributeValueMemberS{Value: updatedSession.Key.String()},
 		},
 		UpdateExpression: aws.String("set expires_at = :expires_at"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -132,16 +133,16 @@ func (s sessionRepository) UpdateSession(ctx context.Context, updatedSession dbm
 	return nil
 }
 
-func (s sessionRepository) DeleteSession(ctx context.Context, key string) error {
+func (s sessionRepository) DeleteSession(ctx context.Context, key idx.SessionID) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("DeleteSession > GetClient: %\n", getClientErr)
+		return fmt.Errorf("DeleteSession > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(SessionTableName),
 		Key: map[string]types.AttributeValue{
-			"key": &types.AttributeValueMemberS{Value: key},
+			"key": &types.AttributeValueMemberS{Value: key.String()},
 		},
 	})
 	if err != nil {

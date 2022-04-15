@@ -21,8 +21,26 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
                   - dynamodb:GetItem
                   - dynamodb:PutItem
                 Resource:
                   - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_sessions
                   - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_users
+                  - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_users/index/invite_code-index
+                  - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_users/index/email_address-index
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                Resource:
+                  - arn:aws:ses:eu-central-1:685079929070:identity/robert.focke96@gmail.com
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:SendMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                  - arn:aws:sqs:eu-central-1:685079929070:InviteUsers.fifo

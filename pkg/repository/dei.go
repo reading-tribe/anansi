@@ -16,11 +16,11 @@ import (
 const DiversityAndInclusionCatalogueTableName = "zula_diversity_and_inclusion_catalogue"
 
 type DiversityAndInclusionCatalogueRepository interface {
-	GetDiversityAndInclusionCatalogueItem(ctx context.Context, id string) (dbmodel.DiversityAndInclusionCatalogue, error)
+	GetDiversityAndInclusionCatalogueItem(ctx context.Context, id idx.DiversityAndInclusionID) (dbmodel.DiversityAndInclusionCatalogue, error)
 	CreateDiversityAndInclusionCatalogueItem(ctx context.Context, newDiversityAndInclusionCatalogue dbmodel.DiversityAndInclusionCatalogue) error
 	ListDiversityAndInclusionCatalogueItems(ctx context.Context) ([]dbmodel.DiversityAndInclusionCatalogue, error)
 	UpdateDiversityAndInclusionCatalogueItem(ctx context.Context, updatedDiversityAndInclusionCatalogue dbmodel.DiversityAndInclusionCatalogue) error
-	DeleteDiversityAndInclusionCatalogueItem(ctx context.Context, id string) error
+	DeleteDiversityAndInclusionCatalogueItem(ctx context.Context, id idx.DiversityAndInclusionID) error
 }
 
 type diversityAndInclusionCatalogueRepository struct{}
@@ -29,18 +29,18 @@ func NewDiversityAndInclusionCatalogueRepository() DiversityAndInclusionCatalogu
 	return diversityAndInclusionCatalogueRepository{}
 }
 
-func (d diversityAndInclusionCatalogueRepository) GetDiversityAndInclusionCatalogueItem(ctx context.Context, id string) (dbmodel.DiversityAndInclusionCatalogue, error) {
+func (d diversityAndInclusionCatalogueRepository) GetDiversityAndInclusionCatalogueItem(ctx context.Context, id idx.DiversityAndInclusionID) (dbmodel.DiversityAndInclusionCatalogue, error) {
 	item := dbmodel.DiversityAndInclusionCatalogue{}
 
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return item, fmt.Errorf("GetDiversityAndInclusionCatalogueItem > GetClient: %\n", getClientErr)
+		return item, fmt.Errorf("GetDiversityAndInclusionCatalogueItem > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(DiversityAndInclusionCatalogueTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 
@@ -63,7 +63,7 @@ func (d diversityAndInclusionCatalogueRepository) GetDiversityAndInclusionCatalo
 func (d diversityAndInclusionCatalogueRepository) CreateDiversityAndInclusionCatalogueItem(ctx context.Context, newDiversityAndInclusionCatalogue dbmodel.DiversityAndInclusionCatalogue) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("CreateDiversityAndInclusionCatalogueItem > GetClient: %\n", getClientErr)
+		return fmt.Errorf("CreateDiversityAndInclusionCatalogueItem > GetClient: %v\n", getClientErr)
 	}
 
 	id, idxErr := idx.NewDiversityAndInclusionCatalogueID()
@@ -93,7 +93,7 @@ func (d diversityAndInclusionCatalogueRepository) CreateDiversityAndInclusionCat
 func (d diversityAndInclusionCatalogueRepository) ListDiversityAndInclusionCatalogueItems(ctx context.Context) ([]dbmodel.DiversityAndInclusionCatalogue, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return nil, fmt.Errorf("ListDiversityAndInclusionCatalogueItems > GetClient: %\n", getClientErr)
+		return nil, fmt.Errorf("ListDiversityAndInclusionCatalogueItems > GetClient: %v\n", getClientErr)
 	}
 
 	items := []dbmodel.DiversityAndInclusionCatalogue{}
@@ -118,13 +118,13 @@ func (d diversityAndInclusionCatalogueRepository) ListDiversityAndInclusionCatal
 func (d diversityAndInclusionCatalogueRepository) UpdateDiversityAndInclusionCatalogueItem(ctx context.Context, updatedDiversityAndInclusionCatalogue dbmodel.DiversityAndInclusionCatalogue) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("UpdateDiversityAndInclusionCatalogueItem > GetClient: %\n", getClientErr)
+		return fmt.Errorf("UpdateDiversityAndInclusionCatalogueItem > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String(DiversityAndInclusionCatalogueTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: updatedDiversityAndInclusionCatalogue.ID},
+			"id": &types.AttributeValueMemberS{Value: updatedDiversityAndInclusionCatalogue.ID.String()},
 		},
 		UpdateExpression: aws.String("set key = :key, value = :value"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -140,16 +140,16 @@ func (d diversityAndInclusionCatalogueRepository) UpdateDiversityAndInclusionCat
 	return nil
 }
 
-func (d diversityAndInclusionCatalogueRepository) DeleteDiversityAndInclusionCatalogueItem(ctx context.Context, id string) error {
+func (d diversityAndInclusionCatalogueRepository) DeleteDiversityAndInclusionCatalogueItem(ctx context.Context, id idx.DiversityAndInclusionID) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("DeleteDiversityAndInclusionCatalogueItem > GetClient: %\n", getClientErr)
+		return fmt.Errorf("DeleteDiversityAndInclusionCatalogueItem > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(DiversityAndInclusionCatalogueTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 	if err != nil {

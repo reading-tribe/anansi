@@ -47,11 +47,43 @@ export interface LoginResponse {
 }
 ```
 
+#### Logout
+
+```typescript
+export interface LogoutRequest {
+	emailAddress: string;
+	key: string;
+}
+```
+
+#### Refresh
+
+```typescript
+export interface RefreshRequest {
+	emailAddress: string;
+	key: string;
+}
+```
+
 #### Authorizing Requests
 
 Once the user has been logged in a temporary access token will be returned. This token needs to be included in all requests made to non Auth-API endpoints (i.e. to the Books, Translations APIs etc...)
 
 Set the header `Authorization: Bearer <Token>` on all non-auth requests.
+
+### Language API
+
+This service enables the retrieval of currently supported languages
+
+#### List Languages
+
+GET - https://aih9h92cb8.execute-api.eu-central-1.amazonaws.com/language
+
+```typescript
+export type Language = string;
+
+export type ListLanguagesResponse = Language[] | null;
+```
 
 ### Books API
 

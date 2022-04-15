@@ -6,7 +6,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-	token: string;
+	token: SessionID;
 	message: string;
 }
 
@@ -19,25 +19,35 @@ export interface RegisterResponse {
 	message: string;
 }
 
+export interface LogoutRequest {
+	emailAddress: string;
+	key: string;
+}
+
+export interface RefreshRequest {
+	emailAddress: string;
+	key: string;
+}
+
 export interface CreateBookRequest {
 	internal_title: string;
 	authors: string;
 }
 
 export interface CreateBookResponse {
-	id: string;
+	id: BookID;
 	internal_title: string;
 	authors: string;
 }
 
 export interface GetBookResponse {
-	id: string;
+	id: BookID;
 	internal_title: string;
 	authors: string;
 }
 
 export interface Book {
-	id: string;
+	id: BookID;
 	internal_title: string;
 	authors: string;
 }
@@ -48,7 +58,7 @@ export interface UpdateBookRequest {
 }
 
 export interface UpdateBookResponse {
-	id: string;
+	id: BookID;
 	internal_title: string;
 	authors: string;
 }
@@ -60,41 +70,98 @@ export interface CreateTranslationRequest {
 }
 
 export interface CreateTranslationResponse {
-	id: string;
-	book_id: string;
+	id: TranslationID;
+	book_id: BookID;
 	localised_title: string;
 	language: Language;
 }
 
 export interface GetTranslationResponse {
-	id: string;
-	book_id: string;
+	id: TranslationID;
+	book_id: BookID;
 	localised_title: string;
 	language: Language;
 }
 
 export interface Translation {
-	id: string;
-	book_id: string;
+	id: TranslationID;
+	book_id: BookID;
 	localised_title: string;
 	language: Language;
 }
 
 export interface UpdateTranslationRequest {
-	book_id: string;
+	book_id: BookID;
 	localised_title: string;
 	language: string;
 }
 
 export interface UpdateTranslationResponse {
-	id: string;
-	book_id: string;
+	id: TranslationID;
+	book_id: BookID;
 	localised_title: string;
 	language: Language;
 }
 
+export interface ListUserResponseItem {
+	id: UserID;
+	email_address: string;
+	confirmed: boolean;
+}
+
+export interface GetUserResponse {
+	id: UserID;
+	email_address: string;
+	confirmed: boolean;
+}
+
+export interface CreateUserResponse {
+	id: UserID;
+	EmailAddress: string;
+	PasswordHash: string;
+	InviteCode: string;
+	Confirmed: boolean;
+}
+
+export interface CreateUserRequest {
+	email_address: string;
+	password: string;
+}
+
+export interface UpdateUserRequest {
+	email_address: string;
+	password: string;
+	confirmed: boolean;
+}
+
+export interface UpdateUserResponse {
+	id: UserID;
+	EmailAddress: string;
+	PasswordHash: string;
+	InviteCode: string;
+	Confirmed: boolean;
+}
+
+export type SessionID = string;
+
+export type BookID = string;
+
 export type ListBooksResponse = Book[] | null;
+
+export type TranslationID = string;
 
 export type Language = string;
 
 export type ListTranslationsResponse = Translation[] | null;
+
+export type ListLanguagesResponse = Language[] | null;
+
+export type UserID = string;
+
+export type ListUsersResponse = ListUserResponseItem[] | null;
+
+export type ChildProfileID = string;
+
+export type DiversityAndInclusionID = string;
+
+export type PageID = string;

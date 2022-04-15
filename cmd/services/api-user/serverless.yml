@@ -1,0 +1,91 @@
+service: UserAPI
+frameworkVersion: '2'
+configValidationMode: error
+unresolvedVariablesNotificationMode: error
+deprecationNotificationMode: error
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: ${opt:stage}
+  region: eu-central-1
+  stackName: UserAPI
+  memorySize: 1024
+  timeout: 10
+  logRetentionInDays: 14
+  deploymentPrefix: serverless
+  versionFunctions: false
+  environment:
+    ENVIRONMENT: ${opt:stage}
+    endpointType: regional
+  iam:
+    role: UserAPILambdaRole
+
+package:
+  individually: true
+  excludeDevDependencies: false
+
+resources:
+  - ${file(./iam.yml)}
+
+functions:
+  CreateUser:
+    handler: bin/func_create_user
+    name: UserAPI-CreateUser
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_create_user
+    events:
+      - httpApi:
+          path: /user
+          method: POST
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
+  DeleteUser:
+    handler: bin/func_delete_user
+    name: UserAPI-DeleteUser
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_delete_user
+    events:
+      - httpApi:
+          path: /user/{id}
+          method: DELETE
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
+  GetUser:
+    handler: bin/func_get_user
+    name: UserAPI-GetUser
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_get_user
+    events:
+      - httpApi:
+          path: /user/{id}
+          method: GET
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
+  ListUsers:
+    handler: bin/func_list_users
+    name: UserAPI-ListUsers
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_list_users
+    events:
+      - httpApi:
+          path: /user
+          method: GET
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
+  UpdateUser:
+    handler: bin/func_update_user
+    name: UserAPI-UpdateUser
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_update_user
+    events:
+      - httpApi:
+          path: /user/{id}
+          method: PATCH
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize

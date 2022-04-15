@@ -29,9 +29,33 @@ resources:
   - ${file(./iam.yml)}
 
 functions:
+  AcceptInvite:
+    handler: bin/func_accept_invite
+    name: AuthAPI-AcceptInvite
+    package:
+      patterns:
+        - '!./**'
+        - './bin/func_accept_invite'
+    events:
+      - httpApi:
+          path: /auth/accept/{code}
+          method: GET
+  InviteUser:
+    handler: bin/func_invite_user
+    name: AuthAPI-InviteUser
+    package:
+      patterns:
+        - '!./**'
+        - './bin/func_invite_user'
+    events:
+       - sqs:
+          arn: arn:aws:sqs:eu-central-1:685079929070:InviteUsers.fifo
+          enabled: true
   Register:
     handler: bin/func_register
     name: AuthAPI-Register
+    environment:
+      INVITE_USER_QUEUE_URL: https://sqs.eu-central-1.amazonaws.com/685079929070/InviteUsers.fifo
     package:
       patterns:
         - '!./**'
@@ -51,3 +75,32 @@ functions:
       - httpApi:
           path: /auth/login
           method: POST
+  Logout:
+    handler: bin/func_logout
+    name: AuthAPI-Logout
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_logout
+    events:
+      - httpApi:
+          path: /auth/logout
+          method: POST
+  Refresh:
+    handler: bin/func_refresh
+    name: AuthAPI-Refresh
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_refresh
+    events:
+      - httpApi:
+          path: /auth/refresh
+          method: POST
+  Authorizer:
+    handler: bin/func_authorizer
+    name: AuthAPI-Authorize
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_authorizer

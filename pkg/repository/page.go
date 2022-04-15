@@ -17,11 +17,11 @@ import (
 const PageTableName = "zula_pages"
 
 type PageRepository interface {
-	GetPage(ctx context.Context, id string) (dbmodel.Page, error)
+	GetPage(ctx context.Context, id idx.PageID) (dbmodel.Page, error)
 	CreatePage(ctx context.Context, newPage dbmodel.Page) error
 	ListPages(ctx context.Context) ([]dbmodel.Page, error)
 	UpdatePage(ctx context.Context, updatedPage dbmodel.Page) error
-	DeletePage(ctx context.Context, id string) error
+	DeletePage(ctx context.Context, id idx.PageID) error
 }
 
 type pageRepository struct{}
@@ -30,18 +30,18 @@ func NewPageRepository() PageRepository {
 	return pageRepository{}
 }
 
-func (p pageRepository) GetPage(ctx context.Context, id string) (dbmodel.Page, error) {
+func (p pageRepository) GetPage(ctx context.Context, id idx.PageID) (dbmodel.Page, error) {
 	item := dbmodel.Page{}
 
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return item, fmt.Errorf("GetPage > GetClient: %\n", getClientErr)
+		return item, fmt.Errorf("GetPage > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(PageTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 
@@ -64,7 +64,7 @@ func (p pageRepository) GetPage(ctx context.Context, id string) (dbmodel.Page, e
 func (p pageRepository) CreatePage(ctx context.Context, newPage dbmodel.Page) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("CreatePage > GetClient: %\n", getClientErr)
+		return fmt.Errorf("CreatePage > GetClient: %v\n", getClientErr)
 	}
 
 	id, idxErr := idx.NewPageID()
@@ -94,7 +94,7 @@ func (p pageRepository) CreatePage(ctx context.Context, newPage dbmodel.Page) er
 func (p pageRepository) ListPages(ctx context.Context) ([]dbmodel.Page, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return nil, fmt.Errorf("ListPages > GetClient: %\n", getClientErr)
+		return nil, fmt.Errorf("ListPages > GetClient: %v\n", getClientErr)
 	}
 
 	items := []dbmodel.Page{}
@@ -119,19 +119,19 @@ func (p pageRepository) ListPages(ctx context.Context) ([]dbmodel.Page, error) {
 func (p pageRepository) UpdatePage(ctx context.Context, updatedPage dbmodel.Page) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("UpdatePage > GetClient: %\n", getClientErr)
+		return fmt.Errorf("UpdatePage > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String(PageTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: updatedPage.ID},
+			"id": &types.AttributeValueMemberS{Value: updatedPage.ID.String()},
 		},
 		UpdateExpression: aws.String("set image_url = :image_url, number = :number, translation_id = :translation_id"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":image_url":      &types.AttributeValueMemberS{Value: updatedPage.ImageURL},
 			":number":         &types.AttributeValueMemberS{Value: strconv.Itoa(updatedPage.Number)},
-			":translation_id": &types.AttributeValueMemberS{Value: updatedPage.TranslationID},
+			":translation_id": &types.AttributeValueMemberS{Value: updatedPage.TranslationID.String()},
 		},
 	})
 
@@ -142,7 +142,7 @@ func (p pageRepository) UpdatePage(ctx context.Context, updatedPage dbmodel.Page
 	return nil
 }
 
-func (p pageRepository) DeletePage(ctx context.Context, id string) error {
+func (p pageRepository) DeletePage(ctx context.Context, id idx.PageID) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
 		return fmt.Errorf("DeletePage > GetClient: %\n", getClientErr)
@@ -151,7 +151,7 @@ func (p pageRepository) DeletePage(ctx context.Context, id string) error {
 	_, err := client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(PageTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 	if err != nil {

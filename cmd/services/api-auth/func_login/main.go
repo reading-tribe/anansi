@@ -16,7 +16,6 @@ import (
 	"github.com/reading-tribe/anansi/pkg/nettypes"
 	"github.com/reading-tribe/anansi/pkg/repository"
 	"github.com/reading-tribe/anansi/pkg/timex"
-	"github.com/sirupsen/logrus"
 )
 
 const FuncName = "Anansi.API-Auth.FuncLogin"
@@ -46,7 +45,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	userRepository := repository.NewUserRepository()
 
-	user, getUserErr := userRepository.GetUser(ctx, parsedRequest.EmailAddress)
+	user, getUserErr := userRepository.GetUserByEmailAddress(ctx, parsedRequest.EmailAddress)
 	if getUserErr != nil {
 		localLogger.Error("Error occurred while trying to get user", getUserErr)
 		return events.APIGatewayV2HTTPResponse{
@@ -92,7 +91,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	responseJSON, marshalErr := json.Marshal(responseBody)
 	if marshalErr != nil {
-		logrus.Error("Error occurred while trying to marshal response as json", marshalErr)
+		localLogger.Error("Error occurred while trying to marshal response as json", marshalErr)
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 		}, marshalErr

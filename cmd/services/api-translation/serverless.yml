@@ -40,6 +40,7 @@ functions:
       - httpApi:
           path: /translation
           method: POST
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   DeleteTranslation:
     handler: bin/func_delete_translation
     name: TranslationAPI-DeleteTranslation
@@ -51,6 +52,7 @@ functions:
       - httpApi:
           path: /translation/{id}
           method: DELETE
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   GetTranslation:
     handler: bin/func_get_translation
     name: TranslationAPI-GetTranslation
@@ -62,6 +64,7 @@ functions:
       - httpApi:
           path: /translation/{id}
           method: GET
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   ListTranslations:
     handler: bin/func_list_translations
     name: TranslationAPI-ListTranslations
@@ -73,6 +76,7 @@ functions:
       - httpApi:
           path: /translation
           method: GET
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   UpdateTranslation:
     handler: bin/func_update_translation
     name: TranslationAPI-UpdateTranslation
@@ -84,3 +88,4 @@ functions:
       - httpApi:
           path: /translation/{id}
           method: PATCH
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/reading-tribe/anansi/pkg/dbmodel"
 	"github.com/reading-tribe/anansi/pkg/headers"
+	"github.com/reading-tribe/anansi/pkg/idx"
 	"github.com/reading-tribe/anansi/pkg/logging"
 	"github.com/reading-tribe/anansi/pkg/nettypes"
 	"github.com/reading-tribe/anansi/pkg/repository"
@@ -45,8 +46,17 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, validationErr
 	}
 
+	bookID := idx.BookID(parsedRequest.BookID)
+
+	if validBookErr := bookID.Validate(); validBookErr != nil {
+		localLogger.Error("Invalid book id", validBookErr)
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusBadRequest,
+		}, validBookErr.GetError()
+	}
+
 	newTranslation := dbmodel.Translation{
-		BookID:         parsedRequest.BookID,
+		BookID:         bookID,
 		LocalisedTitle: parsedRequest.LocalisedTitle,
 		Language:       lang,
 	}

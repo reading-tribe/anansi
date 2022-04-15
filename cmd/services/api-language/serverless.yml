@@ -1,0 +1,44 @@
+service: LanguageAPI
+frameworkVersion: '2'
+configValidationMode: error
+unresolvedVariablesNotificationMode: error
+deprecationNotificationMode: error
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: ${opt:stage}
+  region: eu-central-1
+  stackName: LanguageAPI
+  memorySize: 1024
+  timeout: 10
+  logRetentionInDays: 14
+  deploymentPrefix: serverless
+  versionFunctions: false
+  environment:
+    ENVIRONMENT: ${opt:stage}
+    endpointType: regional
+  iam:
+    role: LanguageAPILambdaRole
+
+package:
+  individually: true
+  excludeDevDependencies: false
+
+resources:
+  - ${file(./iam.yml)}
+
+functions:
+  ListLanguages:
+    handler: bin/func_list_languages
+    name: LanguageAPI-ListLanguages
+    package:
+      patterns:
+        - '!./**'
+        - ./bin/func_list_languages
+    events:
+      - httpApi:
+          path: /language
+          method: GET
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
+

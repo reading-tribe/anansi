@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	typescriptgen.Generate()
+	generator := typescriptgen.NewGenerator()
+	generator.Generate("anansi-api.d.ts")
 }

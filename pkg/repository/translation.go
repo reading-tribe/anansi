@@ -16,11 +16,11 @@ import (
 const TranslationTableName = "zula_translations"
 
 type TranslationRepository interface {
-	GetTranslation(ctx context.Context, id string) (dbmodel.Translation, error)
+	GetTranslation(ctx context.Context, id idx.TranslationID) (dbmodel.Translation, error)
 	CreateTranslation(ctx context.Context, newTranslation dbmodel.Translation) (dbmodel.Translation, error)
 	ListTranslations(ctx context.Context) ([]dbmodel.Translation, error)
 	UpdateTranslation(ctx context.Context, updatedTranslation dbmodel.Translation) error
-	DeleteTranslation(ctx context.Context, id string) error
+	DeleteTranslation(ctx context.Context, id idx.TranslationID) error
 }
 
 type translationRepository struct{}
@@ -29,18 +29,18 @@ func NewTranslationRepository() TranslationRepository {
 	return translationRepository{}
 }
 
-func (t translationRepository) GetTranslation(ctx context.Context, id string) (dbmodel.Translation, error) {
+func (t translationRepository) GetTranslation(ctx context.Context, id idx.TranslationID) (dbmodel.Translation, error) {
 	item := dbmodel.Translation{}
 
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return item, fmt.Errorf("GetTranslation > GetClient: %\n", getClientErr)
+		return item, fmt.Errorf("GetTranslation > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(TranslationTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 
@@ -63,7 +63,7 @@ func (t translationRepository) GetTranslation(ctx context.Context, id string) (d
 func (t translationRepository) CreateTranslation(ctx context.Context, newTranslation dbmodel.Translation) (dbmodel.Translation, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return dbmodel.Translation{}, fmt.Errorf("CreateTranslation > GetClient: %\n", getClientErr)
+		return dbmodel.Translation{}, fmt.Errorf("CreateTranslation > GetClient: %v\n", getClientErr)
 	}
 
 	id, idxErr := idx.NewTranslationID()
@@ -93,7 +93,7 @@ func (t translationRepository) CreateTranslation(ctx context.Context, newTransla
 func (t translationRepository) ListTranslations(ctx context.Context) ([]dbmodel.Translation, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return nil, fmt.Errorf("ListTranslations > GetClient: %\n", getClientErr)
+		return nil, fmt.Errorf("ListTranslations > GetClient: %v\n", getClientErr)
 	}
 
 	items := []dbmodel.Translation{}
@@ -116,17 +116,17 @@ func (t translationRepository) ListTranslations(ctx context.Context) ([]dbmodel.
 func (t translationRepository) UpdateTranslation(ctx context.Context, updatedTranslation dbmodel.Translation) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("UpdateTranslation > GetClient: %\n", getClientErr)
+		return fmt.Errorf("UpdateTranslation > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String(TranslationTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: updatedTranslation.ID},
+			"id": &types.AttributeValueMemberS{Value: updatedTranslation.ID.String()},
 		},
 		UpdateExpression: aws.String("set book_id = :book_id, localised_title = :localised_title, lang = :lang"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":book_id":         &types.AttributeValueMemberS{Value: updatedTranslation.BookID},
+			":book_id":         &types.AttributeValueMemberS{Value: updatedTranslation.BookID.String()},
 			":localised_title": &types.AttributeValueMemberS{Value: updatedTranslation.LocalisedTitle},
 			":lang":            &types.AttributeValueMemberS{Value: string(updatedTranslation.Language)},
 		},
@@ -139,16 +139,16 @@ func (t translationRepository) UpdateTranslation(ctx context.Context, updatedTra
 	return nil
 }
 
-func (t translationRepository) DeleteTranslation(ctx context.Context, id string) error {
+func (t translationRepository) DeleteTranslation(ctx context.Context, id idx.TranslationID) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("DeleteTranslation > GetClient: %\n", getClientErr)
+		return fmt.Errorf("DeleteTranslation > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(TranslationTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 	if err != nil {

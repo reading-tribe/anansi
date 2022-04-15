@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/reading-tribe/anansi/pkg/idx"
 	"github.com/reading-tribe/anansi/pkg/repository"
 	"github.com/reading-tribe/anansi/pkg/timex"
 )
@@ -34,16 +35,27 @@ func authorize(ctx context.Context, event events.APIGatewayCustomAuthorizerReque
 	sessionRepo := repository.NewSessionRepository()
 	token := event.AuthorizationToken
 
-	session, err := sessionRepo.GetSession(ctx, string(token))
+	sessionID := idx.SessionID(token)
+
+	if validationErr := sessionID.Validate(); validationErr != nil {
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Error: Invalid token")
+	}
+
+	session, err := sessionRepo.GetSession(ctx, sessionID)
 	if err != nil {
 		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Error: Invalid token")
+	}
+
+	userID := idx.UserID(session.UserID)
+	if userIDValidationErr := userID.Validate(); userIDValidationErr != nil {
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Error: Invalid user ID associated with session")
 	}
 
 	if session.ExpiresAtUnix < timex.GetCurrentUTCUnixNano() {
 		return generatePolicy("user", "Allow", event.MethodArn), nil
 	}
 
-	_ = sessionRepo.DeleteSession(ctx, token)
+	_ = sessionRepo.DeleteSession(ctx, sessionID)
 
 	return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Unauthorized") // Return a 401 Unauthorized response
 }

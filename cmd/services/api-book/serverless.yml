@@ -40,6 +40,7 @@ functions:
       - httpApi:
           path: /book
           method: POST
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   DeleteBook:
     handler: bin/func_delete_book
     name: BookAPI-DeleteBook
@@ -51,6 +52,7 @@ functions:
       - httpApi:
           path: /book/{id}
           method: DELETE
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   GetBook:
     handler: bin/func_get_book
     name: BookAPI-GetBook
@@ -62,6 +64,7 @@ functions:
       - httpApi:
           path: /book/{id}
           method: GET
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   ListBooks:
     handler: bin/func_list_books
     name: BookAPI-ListBooks
@@ -73,6 +76,7 @@ functions:
       - httpApi:
           path: /book
           method: GET
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   UpdateBook:
     handler: bin/func_update_book
     name: BookAPI-UpdateBook
@@ -84,3 +88,4 @@ functions:
       - httpApi:
           path: /book/{id}
           method: PATCH
+          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize

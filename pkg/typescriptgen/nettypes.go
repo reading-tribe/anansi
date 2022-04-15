@@ -1,41 +1,42 @@
 package typescriptgen
 
 import (
-	"os"
-
 	"github.com/reading-tribe/anansi/pkg/nettypes"
-	"github.com/skia-dev/go2ts"
 )
 
-func generateNettypes() {
-	f, err := os.Create("nettypes.d.ts")
-	if err != nil {
-		panic(err)
-	}
-
-	generator := go2ts.New()
-
+func (g *Generator) generateNettypes() {
 	// API-Auth
-	generator.Add(nettypes.LoginRequest{})
-	generator.Add(nettypes.LoginResponse{})
-	generator.Add(nettypes.RegisterRequest{})
-	generator.Add(nettypes.RegisterResponse{})
+	g.generator.Add(nettypes.LoginRequest{})
+	g.generator.Add(nettypes.LoginResponse{})
+	g.generator.Add(nettypes.RegisterRequest{})
+	g.generator.Add(nettypes.RegisterResponse{})
+	g.generator.Add(nettypes.LogoutRequest{})
+	g.generator.Add(nettypes.RefreshRequest{})
 
 	// API-Book
-	generator.Add(nettypes.CreateBookRequest{})
-	generator.Add(nettypes.CreateBookResponse{})
-	generator.Add(nettypes.GetBookResponse{})
-	generator.Add(nettypes.ListBooksResponse{})
-	generator.Add(nettypes.UpdateBookRequest{})
-	generator.Add(nettypes.UpdateBookResponse{})
+	g.generator.Add(nettypes.CreateBookRequest{})
+	g.generator.Add(nettypes.CreateBookResponse{})
+	g.generator.Add(nettypes.GetBookResponse{})
+	g.generator.Add(nettypes.ListBooksResponse{})
+	g.generator.Add(nettypes.UpdateBookRequest{})
+	g.generator.Add(nettypes.UpdateBookResponse{})
 
-	// API-Book
-	generator.Add(nettypes.CreateTranslationRequest{})
-	generator.Add(nettypes.CreateTranslationResponse{})
-	generator.Add(nettypes.GetTranslationResponse{})
-	generator.Add(nettypes.ListTranslationsResponse{})
-	generator.Add(nettypes.UpdateTranslationRequest{})
-	generator.Add(nettypes.UpdateTranslationResponse{})
+	// API-Translation
+	g.generator.Add(nettypes.CreateTranslationRequest{})
+	g.generator.Add(nettypes.CreateTranslationResponse{})
+	g.generator.Add(nettypes.GetTranslationResponse{})
+	g.generator.Add(nettypes.ListTranslationsResponse{})
+	g.generator.Add(nettypes.UpdateTranslationRequest{})
+	g.generator.Add(nettypes.UpdateTranslationResponse{})
 
-	generator.Render(f)
+	// API-Language
+	g.generator.Add(nettypes.ListLanguagesResponse{})
+
+	// API-User
+	g.generator.Add(nettypes.ListUsersResponse{})
+	g.generator.Add(nettypes.GetUserResponse{})
+	g.generator.Add(nettypes.CreateUserResponse{})
+	g.generator.Add(nettypes.CreateUserRequest{})
+	g.generator.Add(nettypes.UpdateUserRequest{})
+	g.generator.Add(nettypes.UpdateUserResponse{})
 }

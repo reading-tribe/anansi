@@ -16,11 +16,11 @@ import (
 const BookTableName = "zula_books"
 
 type BookRepository interface {
-	GetBook(ctx context.Context, id string) (dbmodel.Book, error)
+	GetBook(ctx context.Context, id idx.BookID) (dbmodel.Book, error)
 	CreateBook(ctx context.Context, newBook dbmodel.Book) (dbmodel.Book, error)
 	ListBooks(ctx context.Context) ([]dbmodel.Book, error)
 	UpdateBook(ctx context.Context, updatedBook dbmodel.Book) error
-	DeleteBook(ctx context.Context, id string) error
+	DeleteBook(ctx context.Context, id idx.BookID) error
 }
 
 type bookRepository struct{}
@@ -29,18 +29,18 @@ func NewBookRepository() BookRepository {
 	return bookRepository{}
 }
 
-func (b bookRepository) GetBook(ctx context.Context, id string) (dbmodel.Book, error) {
+func (b bookRepository) GetBook(ctx context.Context, id idx.BookID) (dbmodel.Book, error) {
 	item := dbmodel.Book{}
 
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return item, fmt.Errorf("GetBook > GetClient: %\n", getClientErr)
+		return item, fmt.Errorf("GetBook > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(BookTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 
@@ -63,7 +63,7 @@ func (b bookRepository) GetBook(ctx context.Context, id string) (dbmodel.Book, e
 func (b bookRepository) CreateBook(ctx context.Context, newBook dbmodel.Book) (dbmodel.Book, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return dbmodel.Book{}, fmt.Errorf("CreateBook > GetClient: %\n", getClientErr)
+		return dbmodel.Book{}, fmt.Errorf("CreateBook > GetClient: %v\n", getClientErr)
 	}
 
 	id, idxErr := idx.NewBookID()
@@ -93,7 +93,7 @@ func (b bookRepository) CreateBook(ctx context.Context, newBook dbmodel.Book) (d
 func (b bookRepository) ListBooks(ctx context.Context) ([]dbmodel.Book, error) {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return nil, fmt.Errorf("ListBooks > GetClient: %\n", getClientErr)
+		return nil, fmt.Errorf("ListBooks > GetClient: %v\n", getClientErr)
 	}
 
 	items := []dbmodel.Book{}
@@ -116,13 +116,13 @@ func (b bookRepository) ListBooks(ctx context.Context) ([]dbmodel.Book, error) {
 func (b bookRepository) UpdateBook(ctx context.Context, updatedBook dbmodel.Book) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("UpdateBook > GetClient: %\n", getClientErr)
+		return fmt.Errorf("UpdateBook > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String(BookTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: updatedBook.ID},
+			"id": &types.AttributeValueMemberS{Value: updatedBook.ID.String()},
 		},
 		UpdateExpression: aws.String("set internal_title = :internal_title, authors = :authors"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -138,16 +138,16 @@ func (b bookRepository) UpdateBook(ctx context.Context, updatedBook dbmodel.Book
 	return nil
 }
 
-func (b bookRepository) DeleteBook(ctx context.Context, id string) error {
+func (b bookRepository) DeleteBook(ctx context.Context, id idx.BookID) error {
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return fmt.Errorf("DeleteBook > GetClient: %\n", getClientErr)
+		return fmt.Errorf("DeleteBook > GetClient: %v\n", getClientErr)
 	}
 
 	_, err := client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(BookTableName),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"id": &types.AttributeValueMemberS{Value: id.String()},
 		},
 	})
 	if err != nil {

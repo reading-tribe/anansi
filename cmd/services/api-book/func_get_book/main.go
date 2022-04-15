@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/reading-tribe/anansi/pkg/headers"
+	"github.com/reading-tribe/anansi/pkg/idx"
 	"github.com/reading-tribe/anansi/pkg/logging"
 	"github.com/reading-tribe/anansi/pkg/nettypes"
 	"github.com/reading-tribe/anansi/pkg/repository"
@@ -37,9 +38,18 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, notOkErr
 	}
 
+	idx := idx.BookID(id)
+
+	if validationErr := idx.Validate(); validationErr != nil {
+		localLogger.Error("Invalid book ID", idx.String())
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusBadRequest,
+		}, validationErr.GetError()
+	}
+
 	bookRepository := repository.NewBookRepository()
 
-	book, getBookErr := bookRepository.GetBook(ctx, id)
+	book, getBookErr := bookRepository.GetBook(ctx, idx)
 	if getBookErr != nil {
 		localLogger.Error("Error occurred while getting book", getBookErr)
 		return events.APIGatewayV2HTTPResponse{

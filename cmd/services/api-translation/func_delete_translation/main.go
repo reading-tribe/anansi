@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/reading-tribe/anansi/pkg/headers"
+	"github.com/reading-tribe/anansi/pkg/idx"
 	"github.com/reading-tribe/anansi/pkg/logging"
 	"github.com/reading-tribe/anansi/pkg/repository"
 )
@@ -35,9 +36,18 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, notOkErr
 	}
 
+	idx := idx.TranslationID(id)
+
+	if validationErr := idx.Validate(); validationErr != nil {
+		localLogger.Error("Invalid translation ID", idx.String())
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusBadRequest,
+		}, validationErr.GetError()
+	}
+
 	TranslationRepository := repository.NewTranslationRepository()
 
-	TranslationDeletionErr := TranslationRepository.DeleteTranslation(ctx, id)
+	TranslationDeletionErr := TranslationRepository.DeleteTranslation(ctx, idx)
 	if TranslationDeletionErr != nil {
 		localLogger.Error("Error occurred while deleting translation", TranslationDeletionErr)
 		return events.APIGatewayV2HTTPResponse{
