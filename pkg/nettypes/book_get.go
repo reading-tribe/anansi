@@ -8,7 +8,7 @@ import (
 type GetBookResponse_Translation_Page struct {
 	ID       idx.PageID `json:"page_id"`
 	ImageURL string     `json:"image_url"`
-	Number   int        `json:"number"`
+	Number   int        `json:"page_number"`
 }
 
 type GetBookResponse_Translation struct {

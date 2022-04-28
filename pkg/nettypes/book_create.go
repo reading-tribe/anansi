@@ -10,7 +10,7 @@ type CreateBookRequest struct {
 		Language       dbmodel.Language `json:"lang"`
 		Pages          []struct {
 			ImageURL string `json:"image_url"`
-			Number   int    `json:"number"`
+			Number   int    `json:"page_number"`
 		} `json:"pages"`
 	} `json:"translations"`
 }

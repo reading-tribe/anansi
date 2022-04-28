@@ -98,7 +98,7 @@ func (p pageRepository) ListPages(ctx context.Context) ([]dbmodel.Page, error) {
 		return nil, fmt.Errorf("ListPages > GetClient: %v\n", getClientErr)
 	}
 
-	items := []dbmodel.Page{}
+	items := []dbmodel.DynamoPage{}
 
 	data, err := client.Query(ctx, &dynamodb.QueryInput{
 		TableName:                 aws.String(PageTableName),
@@ -106,23 +106,29 @@ func (p pageRepository) ListPages(ctx context.Context) ([]dbmodel.Page, error) {
 		ExpressionAttributeValues: map[string]types.AttributeValue{},
 	})
 	if err != nil {
-		return items, fmt.Errorf("ListPages > Query: %v\n", err)
+		return []dbmodel.Page{}, fmt.Errorf("ListPages > Query: %v\n", err)
 	}
 
 	err = attributevalue.UnmarshalListOfMaps(data.Items, &items)
 	if err != nil {
-		return items, fmt.Errorf("ListPages > UnmarshalListOfMaps: %v\n", err)
+		return []dbmodel.Page{}, fmt.Errorf("ListPages > UnmarshalListOfMaps: %v\n", err)
 	}
 
-	return items, nil
+	returnItems := []dbmodel.Page{}
+
+	for _, item := range items {
+		returnItems = append(returnItems, item.ToPage())
+	}
+
+	return returnItems, nil
 }
 
 func (p pageRepository) ListPagesByTranslationID(ctx context.Context, translationID idx.TranslationID) ([]dbmodel.Page, error) {
-	items := []dbmodel.Page{}
+	items := []dbmodel.DynamoPage{}
 
 	client, getClientErr := dynamodbx.GetClient(ctx)
 	if getClientErr != nil {
-		return items, fmt.Errorf("ListPagesByTranslationID > GetClient: %v\n", getClientErr)
+		return []dbmodel.Page{}, fmt.Errorf("ListPagesByTranslationID > GetClient: %v\n", getClientErr)
 	}
 
 	data, err := client.Query(ctx, &dynamodb.QueryInput{
@@ -137,15 +143,21 @@ func (p pageRepository) ListPagesByTranslationID(ctx context.Context, translatio
 	})
 
 	if err != nil {
-		return items, fmt.Errorf("ListPagesByTranslationID > Query: %v\n", err)
+		return []dbmodel.Page{}, fmt.Errorf("ListPagesByTranslationID > Query: %v\n", err)
 	}
 
 	err = attributevalue.UnmarshalListOfMaps(data.Items, &items)
 	if err != nil {
-		return items, fmt.Errorf("ListPagesByTranslationID > UnmarshalListOfMaps: %v\n", err)
+		return []dbmodel.Page{}, fmt.Errorf("ListPagesByTranslationID > UnmarshalListOfMaps: %v\n", err)
 	}
 
-	return items, nil
+	returnItems := []dbmodel.Page{}
+
+	for _, item := range items {
+		returnItems = append(returnItems, item.ToPage())
+	}
+
+	return returnItems, nil
 }
 
 func (p pageRepository) UpdatePage(ctx context.Context, updatedPage dbmodel.Page) error {
@@ -159,10 +171,10 @@ func (p pageRepository) UpdatePage(ctx context.Context, updatedPage dbmodel.Page
 		Key: map[string]types.AttributeValue{
 			"id": &types.AttributeValueMemberS{Value: updatedPage.ID.String()},
 		},
-		UpdateExpression: aws.String("set image_url = :image_url, number = :number, translation_id = :translation_id"),
+		UpdateExpression: aws.String("set image_url = :image_url, page_number = :page_number, translation_id = :translation_id"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":image_url":      &types.AttributeValueMemberS{Value: updatedPage.ImageURL},
-			":number":         &types.AttributeValueMemberS{Value: strconv.Itoa(updatedPage.Number)},
+			":page_number":    &types.AttributeValueMemberS{Value: strconv.Itoa(updatedPage.Number)},
 			":translation_id": &types.AttributeValueMemberS{Value: updatedPage.TranslationID.String()},
 		},
 	})

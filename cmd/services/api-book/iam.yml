@@ -31,3 +31,7 @@ Resources:
                   - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_books
                   - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_sessions
                   - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_users
+                  - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_translations
+                  - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_pages
+                  - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_translations/index/book_id-index
+                  - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_pages/index/translation_id-index
