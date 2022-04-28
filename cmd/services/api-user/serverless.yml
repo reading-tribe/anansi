@@ -40,7 +40,6 @@ functions:
       - httpApi:
           path: /user
           method: POST
-          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   DeleteUser:
     handler: bin/func_delete_user
     name: UserAPI-DeleteUser
@@ -52,7 +51,6 @@ functions:
       - httpApi:
           path: /user/{id}
           method: DELETE
-          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   GetUser:
     handler: bin/func_get_user
     name: UserAPI-GetUser
@@ -64,7 +62,6 @@ functions:
       - httpApi:
           path: /user/{id}
           method: GET
-          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   ListUsers:
     handler: bin/func_list_users
     name: UserAPI-ListUsers
@@ -76,7 +73,6 @@ functions:
       - httpApi:
           path: /user
           method: GET
-          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
   UpdateUser:
     handler: bin/func_update_user
     name: UserAPI-UpdateUser
@@ -88,4 +84,3 @@ functions:
       - httpApi:
           path: /user/{id}
           method: PATCH
-          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize

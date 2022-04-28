@@ -40,5 +40,4 @@ functions:
       - httpApi:
           path: /language
           method: GET
-          authorizer: arn:aws:lambda:eu-central-1:685079929070:function:AuthAPI-Authorize
 

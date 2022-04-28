@@ -29,21 +29,21 @@ export interface RefreshRequest {
 	key: string;
 }
 
-export interface Anonymous2 {
+export interface CreateBookRequest_Translation_Page {
 	image_url: string;
 	page_number: number;
 }
 
-export interface Anonymous1 {
+export interface CreateBookRequest_Translation {
 	localised_title: string;
 	lang: Language;
-	pages: Anonymous2[] | null;
+	pages: CreateBookRequest_Translation_Page[] | null;
 }
 
 export interface CreateBookRequest {
 	internal_title: string;
 	authors: string;
-	translations: Anonymous1[] | null;
+	translations: CreateBookRequest_Translation[] | null;
 }
 
 export interface GetBookResponse_Translation_Page {

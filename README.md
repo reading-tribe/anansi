@@ -18,7 +18,7 @@ This service enables the registration and authentication of users.
 
 #### Registration
 
-POST - https://81qrzgok36.execute-api.eu-central-1.amazonaws.com/auth/register
+POST - https://p8aeakuo0l.execute-api.eu-central-1.amazonaws.com/auth/register
 
 ```typescript
 export interface RegisterRequest {
@@ -33,7 +33,7 @@ export interface RegisterResponse {
 
 #### Login
 
-POST - https://81qrzgok36.execute-api.eu-central-1.amazonaws.com/auth/login
+POST - https://p8aeakuo0l.execute-api.eu-central-1.amazonaws.com/auth/login
 
 ```typescript
 export interface LoginRequest {
@@ -49,6 +49,8 @@ export interface LoginResponse {
 
 #### Logout
 
+POST - https://p8aeakuo0l.execute-api.eu-central-1.amazonaws.com/auth/logout
+
 ```typescript
 export interface LogoutRequest {
 	emailAddress: string;
@@ -57,6 +59,8 @@ export interface LogoutRequest {
 ```
 
 #### Refresh
+
+POST - https://p8aeakuo0l.execute-api.eu-central-1.amazonaws.com/auth/refresh
 
 ```typescript
 export interface RefreshRequest {
@@ -73,7 +77,7 @@ Set the header `Authorization: Bearer <Token>` on all non-auth requests.
 
 ### Language API
 
-This service enables the retrieval of currently supported languages
+This service enables the retrieval of currently supported languages.
 
 #### List Languages
 
@@ -87,143 +91,118 @@ export type ListLanguagesResponse = Language[] | null;
 
 ### Books API
 
-This service enables the creation and administration of book records.
+This service enables the creation and administration of book records, including their constituent translations and pages.
 
 #### Create Book
 
-POST - https://8oufr7mu4f.execute-api.eu-central-1.amazonaws.com/book
+POST - https://bkzq9e40g6.execute-api.eu-central-1.amazonaws.com/book
 
 ```typescript
+export interface CreateBookRequest_Translation_Page {
+	image_url: string;
+	page_number: number;
+}
+
+export interface CreateBookRequest_Translation {
+	localised_title: string;
+	lang: Language;
+	pages: CreateBookRequest_Translation_Page[] | null;
+}
+
 export interface CreateBookRequest {
 	internal_title: string;
 	authors: string;
+	translations: CreateBookRequest_Translation[] | null;
+}
+
+export interface GetBookResponse_Translation_Page {
+	page_id: PageID;
+	image_url: string;
+	page_number: number;
+}
+
+export interface GetBookResponse_Translation {
+	id: TranslationID;
+	localised_title: string;
+	lang: Language;
+	pages: GetBookResponse_Translation_Page[] | null;
 }
 
 export interface CreateBookResponse {
-	id: string;
+	id: BookID;
 	internal_title: string;
 	authors: string;
+	translations: GetBookResponse_Translation[] | null;
 }
 ```
 
 #### Delete Book
 
-DELETE - https://8oufr7mu4f.execute-api.eu-central-1.amazonaws.com/book/{id}
+DELETE - https://bkzq9e40g6.execute-api.eu-central-1.amazonaws.com/book/{id}
 
 #### Get Book
 
-GET - https://8oufr7mu4f.execute-api.eu-central-1.amazonaws.com/book/{id}
+GET - https://bkzq9e40g6.execute-api.eu-central-1.amazonaws.com/book/{id}
 
 ```typescript
+export interface GetBookResponse_Translation_Page {
+	page_id: PageID;
+	image_url: string;
+	page_number: number;
+}
+
+export interface GetBookResponse_Translation {
+	id: TranslationID;
+	localised_title: string;
+	lang: Language;
+	pages: GetBookResponse_Translation_Page[] | null;
+}
+
 export interface GetBookResponse {
-	id: string;
+	id: BookID;
 	internal_title: string;
 	authors: string;
+	translations: GetBookResponse_Translation[] | null;
 }
 ```
 
 #### List Books
 
-GET - https://8oufr7mu4f.execute-api.eu-central-1.amazonaws.com/book
+GET - https://bkzq9e40g6.execute-api.eu-central-1.amazonaws.com/book
 
 ```typescript
-export interface Book {
-	id: string;
-	internal_title: string;
-	authors: string;
-}
-
-export type ListBooksResponse = Book[] | null;
+export type ListBooksResponse = GetBookResponse[] | null;
 ```
 
 #### Update Book
 
-PATCH - https://8oufr7mu4f.execute-api.eu-central-1.amazonaws.com/book/{id}
+PATCH - https://bkzq9e40g6.execute-api.eu-central-1.amazonaws.com/book/{id}
 
 ```typescript
+export interface GetBookResponse_Translation_Page {
+	page_id: PageID;
+	image_url: string;
+	page_number: number;
+}
+
+export interface GetBookResponse_Translation {
+	id: TranslationID;
+	localised_title: string;
+	lang: Language;
+	pages: GetBookResponse_Translation_Page[] | null;
+}
+
 export interface UpdateBookRequest {
+	id: BookID;
 	internal_title: string;
 	authors: string;
+	translations: GetBookResponse_Translation[] | null;
 }
 
 export interface UpdateBookResponse {
-	id: string;
+	id: BookID;
 	internal_title: string;
 	authors: string;
-}
-```
-
-### Translations API
-
-This service enables the creation and administration of book translations.
-
-#### Create Translation
-
-POST - https://fgxdnldga8.execute-api.eu-central-1.amazonaws.com/translation
-
-```typescript
-export interface CreateTranslationRequest {
-	book_id: string;
-	localised_title: string;
-	language: string;
-}
-
-export interface CreateTranslationResponse {
-	id: string;
-	book_id: string;
-	localised_title: string;
-	language: Language;
-}
-```
-
-#### Delete Translation
-
-DELETE - https://fgxdnldga8.execute-api.eu-central-1.amazonaws.com/translation/{id}
-
-#### Get Translation
-
-GET - https://fgxdnldga8.execute-api.eu-central-1.amazonaws.com/translation/{id}
-
-```typescript
-export interface GetTranslationResponse {
-	id: string;
-	book_id: string;
-	localised_title: string;
-	language: Language;
-}
-```
-
-#### List Translations
-
-GET - https://fgxdnldga8.execute-api.eu-central-1.amazonaws.com/translation
-
-```typescript
-export type Language = string;
-export interface Translation {
-	id: string;
-	book_id: string;
-	localised_title: string;
-	language: Language;
-}
-
-export type ListBooksResponse = Book[] | null;
-```
-
-#### Update Translation
-
-PATCH - https://fgxdnldga8.execute-api.eu-central-1.amazonaws.com/translation/{id}
-
-```typescript
-export interface UpdateTranslationRequest {
-	book_id: string;
-	localised_title: string;
-	language: string;
-}
-
-export interface UpdateTranslationResponse {
-	id: string;
-	book_id: string;
-	localised_title: string;
-	language: Language;
+	translations: GetBookResponse_Translation[] | null;
 }
 ```
