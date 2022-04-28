@@ -29,78 +29,62 @@ export interface RefreshRequest {
 	key: string;
 }
 
+export interface Anonymous2 {
+	image_url: string;
+	page_number: number;
+}
+
+export interface Anonymous1 {
+	localised_title: string;
+	lang: Language;
+	pages: Anonymous2[] | null;
+}
+
 export interface CreateBookRequest {
 	internal_title: string;
 	authors: string;
+	translations: Anonymous1[] | null;
+}
+
+export interface GetBookResponse_Translation_Page {
+	page_id: PageID;
+	image_url: string;
+	page_number: number;
+}
+
+export interface GetBookResponse_Translation {
+	id: TranslationID;
+	localised_title: string;
+	lang: Language;
+	pages: GetBookResponse_Translation_Page[] | null;
 }
 
 export interface CreateBookResponse {
 	id: BookID;
 	internal_title: string;
 	authors: string;
+	translations: GetBookResponse_Translation[] | null;
 }
 
 export interface GetBookResponse {
 	id: BookID;
 	internal_title: string;
 	authors: string;
-}
-
-export interface Book {
-	id: BookID;
-	internal_title: string;
-	authors: string;
+	translations: GetBookResponse_Translation[] | null;
 }
 
 export interface UpdateBookRequest {
+	id: BookID;
 	internal_title: string;
 	authors: string;
+	translations: GetBookResponse_Translation[] | null;
 }
 
 export interface UpdateBookResponse {
 	id: BookID;
 	internal_title: string;
 	authors: string;
-}
-
-export interface CreateTranslationRequest {
-	book_id: string;
-	localised_title: string;
-	language: string;
-}
-
-export interface CreateTranslationResponse {
-	id: TranslationID;
-	book_id: BookID;
-	localised_title: string;
-	language: Language;
-}
-
-export interface GetTranslationResponse {
-	id: TranslationID;
-	book_id: BookID;
-	localised_title: string;
-	language: Language;
-}
-
-export interface Translation {
-	id: TranslationID;
-	book_id: BookID;
-	localised_title: string;
-	language: Language;
-}
-
-export interface UpdateTranslationRequest {
-	book_id: BookID;
-	localised_title: string;
-	language: string;
-}
-
-export interface UpdateTranslationResponse {
-	id: TranslationID;
-	book_id: BookID;
-	localised_title: string;
-	language: Language;
+	translations: GetBookResponse_Translation[] | null;
 }
 
 export interface ListUserResponseItem {
@@ -136,23 +120,21 @@ export interface UpdateUserRequest {
 
 export interface UpdateUserResponse {
 	id: UserID;
-	EmailAddress: string;
-	PasswordHash: string;
-	InviteCode: string;
-	Confirmed: boolean;
+	email_address: string;
+	confirmed: boolean;
 }
 
 export type SessionID = string;
 
-export type BookID = string;
+export type Language = string;
 
-export type ListBooksResponse = Book[] | null;
+export type BookID = string;
 
 export type TranslationID = string;
 
-export type Language = string;
+export type PageID = string;
 
-export type ListTranslationsResponse = Translation[] | null;
+export type ListBooksResponse = GetBookResponse[] | null;
 
 export type ListLanguagesResponse = Language[] | null;
 
@@ -163,5 +145,3 @@ export type ListUsersResponse = ListUserResponseItem[] | null;
 export type ChildProfileID = string;
 
 export type DiversityAndInclusionID = string;
-
-export type PageID = string;
