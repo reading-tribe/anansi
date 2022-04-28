@@ -19,6 +19,7 @@ type TranslationRepository interface {
 	GetTranslation(ctx context.Context, id idx.TranslationID) (dbmodel.Translation, error)
 	CreateTranslation(ctx context.Context, newTranslation dbmodel.Translation) (dbmodel.Translation, error)
 	ListTranslations(ctx context.Context) ([]dbmodel.Translation, error)
+	ListTranslationsByBookID(ctx context.Context, bookID idx.BookID) ([]dbmodel.Translation, error)
 	UpdateTranslation(ctx context.Context, updatedTranslation dbmodel.Translation) error
 	DeleteTranslation(ctx context.Context, id idx.TranslationID) error
 }
@@ -137,6 +138,37 @@ func (t translationRepository) UpdateTranslation(ctx context.Context, updatedTra
 	}
 
 	return nil
+}
+
+func (t translationRepository) ListTranslationsByBookID(ctx context.Context, bookID idx.BookID) ([]dbmodel.Translation, error) {
+	items := []dbmodel.Translation{}
+
+	client, getClientErr := dynamodbx.GetClient(ctx)
+	if getClientErr != nil {
+		return items, fmt.Errorf("ListTranslationsByBookID > GetClient: %v\n", getClientErr)
+	}
+
+	data, err := client.Query(ctx, &dynamodb.QueryInput{
+		TableName: aws.String(TranslationTableName),
+		IndexName: aws.String("book_id-index"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":book_id": &types.AttributeValueMemberS{
+				Value: bookID.String(),
+			},
+		},
+		KeyConditionExpression: aws.String("book_id = :book_id"),
+	})
+
+	if err != nil {
+		return items, fmt.Errorf("ListTranslationsByBookID > Query: %v\n", err)
+	}
+
+	err = attributevalue.UnmarshalListOfMaps(data.Items, &items)
+	if err != nil {
+		return items, fmt.Errorf("ListTranslationsByBookID > UnmarshalListOfMaps: %v\n", err)
+	}
+
+	return items, nil
 }
 
 func (t translationRepository) DeleteTranslation(ctx context.Context, id idx.TranslationID) error {

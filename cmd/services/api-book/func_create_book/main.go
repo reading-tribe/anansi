@@ -16,7 +16,17 @@ import (
 
 const FuncName = "Anansi.API-Book.FuncCreateBook"
 
+var (
+	translationRepository repository.TranslationRepository
+	pageRepository        repository.PageRepository
+	bookRepository        repository.BookRepository
+)
+
 func main() {
+	translationRepository = repository.NewTranslationRepository()
+	pageRepository = repository.NewPageRepository()
+	bookRepository = repository.NewBookRepository()
+
 	lambda.Start(handler)
 }
 
@@ -37,13 +47,20 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, parseError
 	}
 
+	// Create stubbed response
+	response := &nettypes.CreateBookResponse{
+		ID:            "",
+		InternalTitle: "",
+		Authors:       "",
+		Translations:  []nettypes.GetBookResponse_Translation{},
+	}
+
+	// Create Book
 	newBook := dbmodel.Book{
 		ID:            "",
 		InternalTitle: parsedRequest.InternalTitle,
 		Authors:       parsedRequest.Authors,
 	}
-
-	bookRepository := repository.NewBookRepository()
 
 	createdBook, bookCreationErr := bookRepository.CreateBook(ctx, newBook)
 	if bookCreationErr != nil {
@@ -53,13 +70,64 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, bookCreationErr
 	}
 
-	responseBody := nettypes.CreateBookResponse{
-		ID:            createdBook.ID,
-		InternalTitle: createdBook.InternalTitle,
-		Authors:       createdBook.Authors,
+	response.ID = createdBook.ID
+	response.InternalTitle = createdBook.InternalTitle
+	response.Authors = createdBook.Authors
+
+	// Create Translations
+	for _, translation := range parsedRequest.Translations {
+		newTranslation := dbmodel.Translation{
+			ID:             "",
+			BookID:         createdBook.ID,
+			LocalisedTitle: translation.LocalisedTitle,
+			Language:       translation.Language,
+		}
+
+		createdTranslation, translationCreationErr := translationRepository.CreateTranslation(ctx, newTranslation)
+		if translationCreationErr != nil {
+			localLogger.Error("Error occurred while creating translation", translationCreationErr)
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusInternalServerError,
+			}, translationCreationErr
+		}
+
+		responseTranslation := nettypes.GetBookResponse_Translation{
+			ID:             createdTranslation.ID,
+			LocalisedTitle: createdTranslation.LocalisedTitle,
+			Language:       createdTranslation.Language,
+			Pages:          []nettypes.GetBookResponse_Translation_Page{},
+		}
+
+		// Create Pages
+		for _, page := range translation.Pages {
+			newPage := dbmodel.Page{
+				ID:            "",
+				ImageURL:      page.ImageURL,
+				Number:        page.Number,
+				TranslationID: createdTranslation.ID,
+			}
+
+			createdPage, pageCreationErr := pageRepository.CreatePage(ctx, newPage)
+			if pageCreationErr != nil {
+				localLogger.Error("Error occurred while creating page", pageCreationErr)
+				return events.APIGatewayV2HTTPResponse{
+					StatusCode: http.StatusInternalServerError,
+				}, pageCreationErr
+			}
+
+			responsePage := nettypes.GetBookResponse_Translation_Page{
+				ID:       createdPage.ID,
+				ImageURL: createdPage.ImageURL,
+				Number:   createdPage.Number,
+			}
+
+			responseTranslation.Pages = append(responseTranslation.Pages, responsePage)
+		}
+
+		response.Translations = append(response.Translations, responseTranslation)
 	}
 
-	responseJSON, marshalErr := json.Marshal(responseBody)
+	responseJSON, marshalErr := json.Marshal(response)
 	if marshalErr != nil {
 		localLogger.Error("Error occurred while trying to marshal response as json", marshalErr)
 		return events.APIGatewayV2HTTPResponse{

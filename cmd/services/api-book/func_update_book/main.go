@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/reading-tribe/anansi/pkg/dbmodel"
+	"github.com/reading-tribe/anansi/pkg/errorx"
 	"github.com/reading-tribe/anansi/pkg/headers"
 	"github.com/reading-tribe/anansi/pkg/idx"
 	"github.com/reading-tribe/anansi/pkg/logging"
@@ -18,7 +19,17 @@ import (
 
 const FuncName = "Anansi.API-Book.FuncUpdateBook"
 
+var (
+	translationRepository repository.TranslationRepository
+	pageRepository        repository.PageRepository
+	bookRepository        repository.BookRepository
+)
+
 func main() {
+	translationRepository = repository.NewTranslationRepository()
+	pageRepository = repository.NewPageRepository()
+	bookRepository = repository.NewBookRepository()
+
 	lambda.Start(handler)
 }
 
@@ -57,13 +68,52 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, parseError
 	}
 
+	if idx != parsedRequest.ID {
+		localLogger.Error("ID mismatch: url ID and body ID did not match", fmt.Sprintf("urlID: %s bodyID: %s", idx.String(), parsedRequest.ID))
+		return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusBadRequest,
+			}, errorx.NewError(
+				fmt.Errorf("ID mismatch: url ID and body ID did not match"),
+				errorx.ValidationFailure,
+				"ID mismatch: url ID and body ID did not match",
+			).GetError()
+	}
+
+	for _, translation := range parsedRequest.Translations {
+		for _, page := range translation.Pages {
+			updatePageError := pageRepository.UpdatePage(ctx, dbmodel.Page{
+				ID:            page.ID,
+				ImageURL:      page.ImageURL,
+				Number:        page.Number,
+				TranslationID: translation.ID,
+			})
+			if updatePageError != nil {
+				localLogger.Error("Error occurred while trying to update page", updatePageError)
+				return events.APIGatewayV2HTTPResponse{
+					StatusCode: http.StatusInternalServerError,
+				}, updatePageError
+			}
+		}
+
+		updatedTranslationErr := translationRepository.UpdateTranslation(ctx, dbmodel.Translation{
+			ID:             translation.ID,
+			BookID:         idx,
+			LocalisedTitle: translation.LocalisedTitle,
+			Language:       translation.Language,
+		})
+		if updatedTranslationErr != nil {
+			localLogger.Error("Error occurred while trying to update translation", updatedTranslationErr)
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusInternalServerError,
+			}, updatedTranslationErr
+		}
+	}
+
 	updatedBook := dbmodel.Book{
 		ID:            idx,
 		InternalTitle: parsedRequest.InternalTitle,
 		Authors:       parsedRequest.Authors,
 	}
-
-	bookRepository := repository.NewBookRepository()
 
 	bookUpdateErr := bookRepository.UpdateBook(ctx, updatedBook)
 	if bookUpdateErr != nil {
@@ -73,11 +123,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, bookUpdateErr
 	}
 
-	responseBody := nettypes.UpdateBookResponse{
-		ID:            updatedBook.ID,
-		InternalTitle: updatedBook.InternalTitle,
-		Authors:       updatedBook.Authors,
-	}
+	var responseBody nettypes.UpdateBookResponse = nettypes.UpdateBookResponse(parsedRequest)
 
 	responseJSON, marshalErr := json.Marshal(responseBody)
 	if marshalErr != nil {

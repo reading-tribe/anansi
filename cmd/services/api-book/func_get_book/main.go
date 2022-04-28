@@ -17,7 +17,17 @@ import (
 
 const FuncName = "Anansi.API-Book.FuncGetBook"
 
+var (
+	translationRepository repository.TranslationRepository
+	pageRepository        repository.PageRepository
+	bookRepository        repository.BookRepository
+)
+
 func main() {
+	translationRepository = repository.NewTranslationRepository()
+	pageRepository = repository.NewPageRepository()
+	bookRepository = repository.NewBookRepository()
+
 	lambda.Start(handler)
 }
 
@@ -47,8 +57,6 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		}, validationErr.GetError()
 	}
 
-	bookRepository := repository.NewBookRepository()
-
 	book, getBookErr := bookRepository.GetBook(ctx, idx)
 	if getBookErr != nil {
 		localLogger.Error("Error occurred while getting book", getBookErr)
@@ -61,6 +69,42 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 		ID:            book.ID,
 		InternalTitle: book.InternalTitle,
 		Authors:       book.Authors,
+		Translations:  []nettypes.GetBookResponse_Translation{},
+	}
+
+	translations, listTranslationsErr := translationRepository.ListTranslationsByBookID(ctx, book.ID)
+	if listTranslationsErr != nil {
+		localLogger.Error("Error occurred while listing translations", listTranslationsErr)
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusInternalServerError,
+		}, listTranslationsErr
+	}
+
+	for _, translation := range translations {
+		tempTranslation := nettypes.GetBookResponse_Translation{
+			ID:             translation.ID,
+			LocalisedTitle: translation.LocalisedTitle,
+			Language:       translation.Language,
+			Pages:          []nettypes.GetBookResponse_Translation_Page{},
+		}
+
+		pages, listPagesErr := pageRepository.ListPagesByTranslationID(ctx, translation.ID)
+		if listPagesErr != nil {
+			localLogger.Error("Error occurred while listing pages", listPagesErr)
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusInternalServerError,
+			}, listPagesErr
+		}
+
+		for _, page := range pages {
+			tempTranslation.Pages = append(tempTranslation.Pages, nettypes.GetBookResponse_Translation_Page{
+				ID:       page.ID,
+				ImageURL: page.ImageURL,
+				Number:   page.Number,
+			})
+		}
+
+		responseBody.Translations = append(responseBody.Translations, tempTranslation)
 	}
 
 	responseJSON, marshalErr := json.Marshal(responseBody)

@@ -15,7 +15,17 @@ import (
 
 const FuncName = "Anansi.API-Book.FuncDeleteBook"
 
+var (
+	translationRepository repository.TranslationRepository
+	pageRepository        repository.PageRepository
+	bookRepository        repository.BookRepository
+)
+
 func main() {
+	translationRepository = repository.NewTranslationRepository()
+	pageRepository = repository.NewPageRepository()
+	bookRepository = repository.NewBookRepository()
+
 	lambda.Start(handler)
 }
 
@@ -46,6 +56,42 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 	}
 
 	bookRepository := repository.NewBookRepository()
+
+	translations, listTranslationsErr := translationRepository.ListTranslationsByBookID(ctx, idx)
+	if listTranslationsErr != nil {
+		localLogger.Error("Error occurred while listing translations", listTranslationsErr)
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusInternalServerError,
+		}, listTranslationsErr
+	}
+
+	for _, translation := range translations {
+		pages, listPagesErr := pageRepository.ListPagesByTranslationID(ctx, translation.ID)
+		if listPagesErr != nil {
+			localLogger.Error("Error occurred while listing pages", listPagesErr)
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusInternalServerError,
+			}, listPagesErr
+		}
+
+		for _, page := range pages {
+			pageDeletionErr := pageRepository.DeletePage(ctx, page.ID)
+			if pageDeletionErr != nil {
+				localLogger.Error("Error occurred while deleting page", pageDeletionErr)
+				return events.APIGatewayV2HTTPResponse{
+					StatusCode: http.StatusInternalServerError,
+				}, pageDeletionErr
+			}
+		}
+
+		translationDeletionErr := translationRepository.DeleteTranslation(ctx, translation.ID)
+		if translationDeletionErr != nil {
+			localLogger.Error("Error occurred while deleting translation", translationDeletionErr)
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusInternalServerError,
+			}, translationDeletionErr
+		}
+	}
 
 	bookDeletionErr := bookRepository.DeleteBook(ctx, idx)
 	if bookDeletionErr != nil {

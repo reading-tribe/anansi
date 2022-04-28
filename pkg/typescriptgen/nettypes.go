@@ -21,14 +21,6 @@ func (g *Generator) generateNettypes() {
 	g.generator.Add(nettypes.UpdateBookRequest{})
 	g.generator.Add(nettypes.UpdateBookResponse{})
 
-	// API-Translation
-	g.generator.Add(nettypes.CreateTranslationRequest{})
-	g.generator.Add(nettypes.CreateTranslationResponse{})
-	g.generator.Add(nettypes.GetTranslationResponse{})
-	g.generator.Add(nettypes.ListTranslationsResponse{})
-	g.generator.Add(nettypes.UpdateTranslationRequest{})
-	g.generator.Add(nettypes.UpdateTranslationResponse{})
-
 	// API-Language
 	g.generator.Add(nettypes.ListLanguagesResponse{})
 
