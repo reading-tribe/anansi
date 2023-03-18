@@ -25,6 +25,7 @@ Resources:
                   - dynamodb:UpdateItem
                   - dynamodb:GetItem
                   - dynamodb:PutItem
+                  - dynamodb:DeleteItem
                 Resource:
                   - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_sessions
                   - arn:aws:dynamodb:eu-central-1:685079929070:table/zula_users
